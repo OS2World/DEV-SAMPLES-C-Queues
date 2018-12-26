@@ -1,0 +1,61 @@
+These files have been uploaded in response to message #36711 from Steve
+Liberty 71450,2341.  Since these are questions of a general interest, the
+response has been posted here.
+
+An example program is attached (files CLIENT.C and SERVER.C) that demonstrates
+some of the concepts that are outlined in the answers to the following
+questions about using queue's in OS/2.
+
+For the sake of convenience, the contents of Steve's original question have
+been included here.
+
+>#: 36711 S8/OS/2
+>    07-Oct-88  09:55:28
+>Sb: Queue questions
+>Fm: STEVE LIBERTY 71450,2341
+>To: all
+>
+>I am playing around with Queues, and have several questions. If anyone can
+>help me clear up my hazy understanding on this topic, I would greatly
+>appreciate it.
+>
+>First, am I correct that the data being passed from one process to another
+>must be passed in shared memory? It appears from the docs that the only data
+>that can actually be contained in the queue packet is an unsigned event_code.
+>So I assume that the data address field of the packet points into some shared
+>memory. Is that right?
+
+** Right; queues only pass the address of the data back and forth. It is
+the responsibility of the process to set up a data transfer area- usually
+a piece of shared memory.
+
+>Next, if that is correct, what is the best way to handle the shared memory?
+>Does it matter whether the reader or writer allocates the memory? Should it
+>selector be accessed by the other via a DosGetShrSeg call?
+
+** There are no hard and fast rules for this but the attached example uses
+the method that you describe, namely that the client process opens the
+shared segment and the server opens this segment using DosGetShrSeg.
+
+>Finally, if all of the above is somewhat on track, once the selector is found
+>say by the writer, how does he move a string into the shared memory? For
+>example can he simply use strcpy? How is the selector converted into an
+>address, and can that address be incremented by the string's length to get to
+>the next slot?
+
+** The best way to handle the allocation is to use DosSubAlloc to allocate
+space for each object from within the client process and then have the
+server process free this block when it is done reading the information.
+Doing it this way insures that you will not have any data corruption and
+freeing the memory after its use will return the memory to the pool for
+subsequent writes (i.e. allocations) by the client process. As for the
+actual transfer of information from the client to the shared segment,
+memcpy or strcpy work fine for this. The attached example use strcpy
+because the information transfered is a string.
+
+Here is how to use the attached example: Compile CLIENT.C and SERVER.C
+seperatly with /AL (large model). Detach CLIENT.EXE and then run SERVER.EXE.
+Alternately, you can run CLIENT.EXE in one screen group, switch to another
+and run SERVER.EXE.
+
+If you have any other questions or problems, let us know.
